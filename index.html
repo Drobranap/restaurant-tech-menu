@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} body{margin:0} img{max-width:100%} [hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Restaurant Tech Menu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+/* Layout: a printed restaurant menu. Courses = effort level, dotted leaders lead to setup time instead of a price. */
+:root{
+  --paper:#F2F5F0; --panel:#E4EBE3; --ink:#15201A; --muted:#55645B; --rule:#B9C6BC;
+  --sorrel:#A3173F; --pepper:#D2701A; --leaf:#2E7A57; --focus:#A3173F;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --f-body:"Newsreader", Georgia, "Times New Roman", serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1612; --panel:#18231C; --ink:#E6EDE8; --muted:#9AAAA0; --rule:#334139;
+    --sorrel:#F06A8A; --pepper:#F0A35C; --leaf:#62C597; --focus:#F06A8A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1612; --panel:#18231C; --ink:#E6EDE8; --muted:#9AAAA0; --rule:#334139;
+  --sorrel:#F06A8A; --pepper:#F0A35C; --leaf:#62C597; --focus:#F06A8A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{background:var(--paper); color:var(--ink); font-family:var(--f-body); font-size:18px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1100px; margin:0 auto; padding-block:48px 120px; display:flex; flex-direction:column; gap:64px}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:3px; border-radius:4px}
+
+.eyebrow{font-family:var(--f-mono); font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0}
+.hero{display:flex; flex-direction:column; gap:20px}
+.hero h1{font-family:var(--f-display); font-weight:800; font-size:clamp(44px, 9vw, 104px); line-height:.92; letter-spacing:-.03em; margin:0; text-wrap:balance}
+.hero h1 em{font-style:normal; color:var(--sorrel)}
+.lede{font-size:clamp(19px, 2.2vw, 23px); max-width:40ch; margin:0; color:var(--ink)}
+.count{font-family:var(--f-mono); font-size:13px; color:var(--muted); margin:0; font-variant-numeric:tabular-nums}
+
+.legend{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:0; border-block:3px double var(--rule)}
+.legend > div{padding:18px 20px; display:flex; flex-direction:column; gap:6px; min-width:0}
+.legend > div + div{border-left:1px solid var(--rule)}
+.legend h2{font-family:var(--f-display); font-size:20px; font-weight:700; margin:0; display:flex; align-items:center; gap:10px}
+.legend p{margin:0; font-size:16px; color:var(--muted)}
+.dot{display:inline-block; width:11px; height:11px; border-radius:50%; flex:none}
+.dot-starter{background:var(--pepper)} .dot-main{background:var(--leaf)} .dot-special{background:var(--sorrel)}
+
+.start{background:var(--panel); border-radius:6px; padding:32px clamp(20px, 4vw, 40px); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); gap:32px}
+.start h2{font-family:var(--f-display); font-size:clamp(28px, 4vw, 40px); line-height:1; letter-spacing:-.02em; margin:0 0 10px}
+.start-intro p{margin:0; color:var(--muted); font-size:17px}
+.start ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:18px}
+.start li p{margin:4px 0 0; font-size:17px; color:var(--muted)}
+.start strong{font-family:var(--f-display); font-size:21px; font-weight:700}
+
+.toolbar{position:sticky; top:env(safe-area-inset-top, 0px); z-index:5; background:var(--paper); padding-block:12px; border-bottom:1px solid var(--rule); display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between}
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top, 0px); z-index:10; background:var(--paper)}
+.filters{display:flex; flex-wrap:wrap; gap:8px}
+.chip{font-family:var(--f-mono); font-size:13px; padding:7px 12px; border-radius:999px; border:1px solid var(--rule); background:transparent; color:var(--ink); cursor:pointer; display:inline-flex; align-items:center; gap:8px}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.jump{display:flex; flex-wrap:wrap; gap:6px 14px; font-family:var(--f-mono); font-size:13px}
+.jump a{color:var(--muted); text-decoration:none}
+.jump a:hover{color:var(--ink); text-decoration:underline}
+
+.area{display:flex; flex-direction:column; gap:24px; scroll-margin-top:110px}
+.area-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 20px; border-bottom:3px double var(--rule); padding-bottom:12px}
+.area-head h2{font-family:var(--f-display); font-weight:800; font-size:clamp(30px, 4.5vw, 46px); letter-spacing:-.02em; line-height:1; margin:0}
+.area-head p{margin:0; color:var(--muted); font-style:italic; font-size:18px}
+.dishes{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:32px 56px}
+.dish{display:flex; flex-direction:column; gap:8px; min-width:0}
+.dish-head{display:flex; align-items:baseline; gap:0; min-width:0}
+.dish h3{font-family:var(--f-display); font-weight:700; font-size:21px; line-height:1.15; margin:0; min-width:0}
+.leader{flex:1 1 24px; min-width:24px; border-bottom:2px dotted var(--rule); margin:0 10px; transform:translateY(-5px)}
+.time{font-family:var(--f-mono); font-size:13px; color:var(--ink); white-space:nowrap; font-variant-numeric:tabular-nums}
+.desc{margin:0; font-style:italic; color:var(--ink); max-width:60ch}
+.why{margin:0; font-size:15.5px; color:var(--muted); max-width:60ch}
+.why-label{font-family:var(--f-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--sorrel); margin-right:4px}
+.dish-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:2px}
+.course{font-family:var(--f-mono); font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:8px}
+.pick{font-family:var(--f-mono); font-size:12px; border:1px solid var(--rule); background:transparent; color:var(--ink); border-radius:999px; padding:5px 11px; cursor:pointer}
+.pick:hover{border-color:var(--ink)}
+.pick[aria-pressed="true"]{background:var(--sorrel); border-color:var(--sorrel); color:var(--paper)}
+
+.needs{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); gap:32px; border-top:3px double var(--rule); padding-top:28px}
+.needs h2, .context h2, .sources h2{font-family:var(--f-display); font-size:clamp(26px, 3.5vw, 34px); letter-spacing:-.02em; line-height:1.05; margin:0}
+.needs ul{margin:0; padding-left:1.1em; display:flex; flex-direction:column; gap:8px}
+.needs-intro p{margin:10px 0 0; color:var(--muted); font-size:17px}
+
+.context{display:flex; flex-direction:column; gap:20px}
+.facts{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:24px}
+.fact{display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--rule); padding-top:14px; min-width:0}
+.fact-num{font-family:var(--f-display); font-weight:800; font-size:clamp(32px, 4vw, 44px); line-height:1; letter-spacing:-.02em}
+.fact-txt{font-size:17px}
+.fact-src{font-family:var(--f-mono); font-size:12px; color:var(--muted)}
+
+.sources ol{margin:12px 0 0; padding-left:1.3em; font-size:15px; color:var(--muted); display:flex; flex-direction:column; gap:4px}
+.sources a{text-underline-offset:2px}
+.foot{font-family:var(--f-mono); font-size:12px; color:var(--muted); margin:0}
+
+.tray{position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--ink); color:var(--paper);
+  padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.tray-in{max-width:1100px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px}
+.tray p{margin:0; font-family:var(--f-mono); font-size:13px}
+.tray-btns{display:flex; gap:8px}
+.tray button{font-family:var(--f-mono); font-size:13px; border-radius:999px; padding:8px 14px; cursor:pointer; border:1px solid var(--paper); background:transparent; color:var(--paper)}
+.tray button.primary{background:var(--paper); color:var(--ink)}
+.tray textarea{width:100%; min-height:120px; font-family:var(--f-mono); font-size:12px; background:var(--paper); color:var(--ink); border:0; border-radius:4px; padding:10px}
+.tray :focus-visible{outline-color:var(--paper)}
+
+@media (max-width: 860px){
+  .dishes{grid-template-columns:minmax(0,1fr); gap:28px}
+  .start, .needs{grid-template-columns:minmax(0,1fr); gap:20px}
+  .facts{grid-template-columns:minmax(0,1fr); gap:16px}
+}
+@media (max-width: 640px){
+  body{font-size:17px}
+  .wrap{padding-block:28px 120px; gap:48px}
+  .legend{grid-template-columns:minmax(0,1fr)}
+  .legend > div + div{border-left:0; border-top:1px solid var(--rule)}
+  .legend > div{padding:14px 4px}
+  .jump{display:none}
+  .area{scroll-margin-top:80px}
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Trinidad &amp; Tobago · October 2026</p>
+    <h1>The Restaurant <em>Tech</em> Menu</h1>
+    <p class="lede">What a restaurant can switch on today with AI and modern software, from Google reviews to the walk-in freezer. Order a few starters first. Add mains when they pay off.</p>
+    <p class="count">39 ideas · 7 areas · 18 starters · 18 mains · 3 chef's specials</p>
+  </header>
+
+  <section class="legend" aria-label="How to read this menu">
+    <div><h2><i class="dot dot-starter" aria-hidden="true"></i>Starters</h2><p>Quick wins. Live in days, no new hardware, low cost.</p></div>
+    <div><h2><i class="dot dot-main" aria-hidden="true"></i>Mains</h2><p>Core systems. One to four weeks to set up, then they run every day.</p></div>
+    <div><h2><i class="dot dot-special" aria-hidden="true"></i>Chef's specials</h2><p>Advanced. Need a few months of your own data before they shine.</p></div>
+  </section>
+
+  <section class="start" aria-labelledby="h-start">
+    <div class="start-intro">
+      <h2 id="h-start">If you start tomorrow</h2>
+      <p>Three picks that pay back fastest and need nothing but a phone, your Google listing and your till exports.</p>
+    </div>
+    <ol><li><div class="dish-head"><strong>AI review replies</strong><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span></div><p>A visible win in the first week. Every guest who leaves a review gets an answer.</p></li><li><div class="dish-head"><strong>WhatsApp assistant</strong><span class="leader" aria-hidden="true"></span><span class="time">1-2 weeks</span></div><p>Bookings and questions answered while the team cooks and serves.</p></li><li><div class="dish-head"><strong>Daily money report</strong><span class="leader" aria-hidden="true"></span><span class="time">1-2 weeks</span></div><p>Till, card deposits, cash and delivery payouts checked every morning.</p></li></ol>
+  </section>
+
+  <div class="toolbar">
+    <div class="filters" role="group" aria-label="Filter by course">
+      <button type="button" class="chip" id="f-all" data-filter="all" aria-pressed="true">All 39</button>
+      <button type="button" class="chip" id="f-starter" data-filter="starter" aria-pressed="false"><i class="dot dot-starter" aria-hidden="true"></i>Starters</button>
+      <button type="button" class="chip" id="f-main" data-filter="main" aria-pressed="false"><i class="dot dot-main" aria-hidden="true"></i>Mains</button>
+      <button type="button" class="chip" id="f-special" data-filter="special" aria-pressed="false"><i class="dot dot-special" aria-hidden="true"></i>Chef's specials</button>
+    </div>
+    <nav class="jump" aria-label="Jump to area"><a href="#found">Get found</a><a href="#orders">Bookings and orders</a><a href="#guests">Guests and loyalty</a><a href="#kitchen">Kitchen and stock</a><a href="#money">Money and control</a><a href="#team">Your team</a><a href="#safety">Safety and equipment</a></nav>
+  </div>
+
+    <section class="area" id="found" aria-labelledby="h-found">
+      <header class="area-head">
+        <h2 id="h-found">Get found</h2>
+        <p>Turn people searching nearby into guests.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="starter" data-name="Google profile tune-up" data-time="2-3 days" id="d-google-profile-tune-up">
+        <div class="dish-head">
+          <h3>Google profile tune-up</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span>
+        </div>
+        <p class="desc">Correct hours, real photos, menu link, booking button and WhatsApp on your Google listing. This is the first thing new guests see when they search nearby.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-google-profile-tune-up" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="AI review replies" data-time="2-3 days" id="d-ai-review-replies">
+        <div class="dish-head">
+          <h3>AI review replies</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span>
+        </div>
+        <p class="desc">Every Google and TripAdvisor review gets a reply in your voice within hours. Reviews with 1-3 stars reach you on WhatsApp first, so you decide how to answer.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-ai-review-replies" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Menu-grade food photos" data-time="1 week" id="d-menu-grade-food-photos">
+        <div class="dish-head">
+          <h3>Menu-grade food photos</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">Phone shots turned into clean, consistent photos for the menu, Google, Instagram and the delivery apps.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-menu-grade-food-photos" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Reels and TikTok machine" data-time="2 weeks, then weekly" id="d-reels-and-tiktok-machine">
+        <div class="dish-head">
+          <h3>Reels and TikTok machine</h3><span class="leader" aria-hidden="true"></span><span class="time">2 weeks, then weekly</span>
+        </div>
+        <p class="desc">Staff film 30 seconds in the kitchen or at the bar. AI edits, adds captions and schedules posts on Instagram, TikTok and Facebook.</p><p class="why"><span class="why-label">Why here</span> About 974,000 people in T&amp;T use social media, roughly 64% of the population.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-reels-and-tiktok-machine" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Season calendar" data-time="1 week" id="d-season-calendar">
+        <div class="dish-head">
+          <h3>Season calendar</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">Campaigns written and designed ahead for Carnival, Easter, Divali, parang season at Christmas and Tobago Carnival in October.</p><p class="why"><span class="why-label">Why here</span> Carnival falls in late February or early March, so the busiest weeks are known a year ahead.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-season-calendar" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="AI search visibility" data-time="1 month, then monthly" id="d-ai-search-visibility">
+        <div class="dish-head">
+          <h3>AI search visibility</h3><span class="leader" aria-hidden="true"></span><span class="time">1 month, then monthly</span>
+        </div>
+        <p class="desc">When someone asks ChatGPT or Gemini for the best curry crab and dumpling in Tobago or a good lime spot in Port of Spain, your restaurant shows up in the answer.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-ai-search-visibility" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="One-page website" data-time="1 week" id="d-one-page-website">
+        <div class="dish-head">
+          <h3>One-page website</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">Menu, photos, booking, WhatsApp button and online orders on one fast page that works on any phone.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-one-page-website" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section class="area" id="orders" aria-labelledby="h-orders">
+      <header class="area-head">
+        <h2 id="h-orders">Bookings and orders</h2>
+        <p>Take every booking and order, even when the phone is ringing off the hook.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="main" data-name="WhatsApp assistant" data-time="1-2 weeks" id="d-whatsapp-assistant">
+        <div class="dish-head">
+          <h3>WhatsApp assistant</h3><span class="leader" aria-hidden="true"></span><span class="time">1-2 weeks</span>
+        </div>
+        <p class="desc">Answers hours, menu, prices and directions day and night, takes bookings and pickup orders, and hands the chat to a person when it should.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-whatsapp-assistant" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="AI phone host" data-time="2-3 weeks" id="d-ai-phone-host">
+        <div class="dish-head">
+          <h3>AI phone host</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">Picks up when staff are busy, takes bookings, answers the usual questions and sends you a short summary of every call.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-ai-phone-host" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Bookings with reminders" data-time="3-5 days" id="d-bookings-with-reminders">
+        <div class="dish-head">
+          <h3>Bookings with reminders</h3><span class="leader" aria-hidden="true"></span><span class="time">3-5 days</span>
+        </div>
+        <p class="desc">Online booking with automatic WhatsApp reminders and optional deposits for large tables. Fewer empty tables from no-shows.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-bookings-with-reminders" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Your own online ordering" data-time="2-3 weeks" id="d-your-own-online-ordering">
+        <div class="dish-head">
+          <h3>Your own online ordering</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">A commission-free ordering page with card payment. Keep the delivery apps for reach and move your regulars to ordering direct.</p><p class="why"><span class="why-label">Why here</span> Local delivery apps include foodDROP in Trinidad and Tappogo in Tobago. Local gateways such as WiPay take payments in TTD.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-your-own-online-ordering" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="QR order and pay at table" data-time="2-4 weeks" id="d-qr-order-and-pay-at-table">
+        <div class="dish-head">
+          <h3>QR order and pay at table</h3><span class="leader" aria-hidden="true"></span><span class="time">2-4 weeks</span>
+        </div>
+        <p class="desc">Guests scan a code, order and pay from their phone. Tables turn faster on busy nights and nobody waits for the bill.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-qr-order-and-pay-at-table" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Menu in other languages" data-time="2-3 days" id="d-menu-in-other-languages">
+        <div class="dish-head">
+          <h3>Menu in other languages</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span>
+        </div>
+        <p class="desc">The menu translated automatically for visitors and Spanish-speaking guests, with allergens clearly marked.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-menu-in-other-languages" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section class="area" id="guests" aria-labelledby="h-guests">
+      <header class="area-head">
+        <h2 id="h-guests">Guests and loyalty</h2>
+        <p>Know your regulars and give them reasons to come back.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="main" data-name="Guest list that builds itself" data-time="2-3 weeks" id="d-guest-list-that-builds-itself">
+        <div class="dish-head">
+          <h3>Guest list that builds itself</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">Every booking and order adds to one guest file: name, birthday, favourite dishes and how often they come.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-guest-list-that-builds-itself" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Birthday and win-back messages" data-time="3 days after the guest list" id="d-birthday-and-win-back-messages">
+        <div class="dish-head">
+          <h3>Birthday and win-back messages</h3><span class="leader" aria-hidden="true"></span><span class="time">3 days after the guest list</span>
+        </div>
+        <p class="desc">Birthday offers and a friendly note to guests who have not visited in 60 days, sent on WhatsApp automatically.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-birthday-and-win-back-messages" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Digital loyalty card" data-time="2 weeks" id="d-digital-loyalty-card">
+        <div class="dish-head">
+          <h3>Digital loyalty card</h3><span class="leader" aria-hidden="true"></span><span class="time">2 weeks</span>
+        </div>
+        <p class="desc">A stamp card that lives in Apple Wallet or Google Wallet. No app to download and no paper cards to lose.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-digital-loyalty-card" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="After-visit feedback" data-time="3 days" id="d-after-visit-feedback">
+        <div class="dish-head">
+          <h3>After-visit feedback</h3><span class="leader" aria-hidden="true"></span><span class="time">3 days</span>
+        </div>
+        <p class="desc">A two-question survey after the visit, with a link to review you on Google. Problems reach you the same day instead of a week later.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-after-visit-feedback" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="special" data-name="Guest notes for servers" data-time="1-2 months" id="d-guest-notes-for-servers">
+        <div class="dish-head">
+          <h3>Guest notes for servers</h3><span class="leader" aria-hidden="true"></span><span class="time">1-2 months</span>
+        </div>
+        <p class="desc">The server&#x27;s phone shows who is at the table: sixth visit, always orders the pelau, nut allergy. Service feels personal without anyone memorising it.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-special" aria-hidden="true"></i>Chef&#x27;s special</span>
+          <button type="button" class="pick" id="p-guest-notes-for-servers" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section class="area" id="kitchen" aria-labelledby="h-kitchen">
+      <header class="area-head">
+        <h2 id="h-kitchen">Kitchen and stock</h2>
+        <p>Know what every plate costs and stop buying what you throw away.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="starter" data-name="Invoice scanning" data-time="1 week" id="d-invoice-scanning">
+        <div class="dish-head">
+          <h3>Invoice scanning</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">Snap a photo of a supplier invoice. AI reads the items and prices and updates your costs.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-invoice-scanning" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Live food cost per dish" data-time="2-3 weeks" id="d-live-food-cost-per-dish">
+        <div class="dish-head">
+          <h3>Live food cost per dish</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">Every recipe costed to the cent. When a supplier raises a price, you see which dishes lost margin that same day.</p><p class="why"><span class="why-label">Why here</span> The national food import bill hit a record of about TT$7.3 billion, so imported ingredient prices can move fast.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-live-food-cost-per-dish" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Menu engineering" data-time="3-5 days" id="d-menu-engineering">
+        <div class="dish-head">
+          <h3>Menu engineering</h3><span class="leader" aria-hidden="true"></span><span class="time">3-5 days</span>
+        </div>
+        <p class="desc">Your dishes sorted by popularity and profit into Stars, Plowhorses, Puzzles and Dogs: what to promote, reprice, rework or drop.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-menu-engineering" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Stock count by voice" data-time="2 weeks" id="d-stock-count-by-voice">
+        <div class="dish-head">
+          <h3>Stock count by voice</h3><span class="leader" aria-hidden="true"></span><span class="time">2 weeks</span>
+        </div>
+        <p class="desc">Walk the storeroom and say the counts out loud. AI fills in the sheet and flags what needs reordering.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-stock-count-by-voice" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Waste log" data-time="2 weeks" id="d-waste-log">
+        <div class="dish-head">
+          <h3>Waste log</h3><span class="leader" aria-hidden="true"></span><span class="time">2 weeks</span>
+        </div>
+        <p class="desc">A quick photo of what goes in the bin and why. After a month you know exactly where the waste comes from.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-waste-log" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="special" data-name="Demand forecast and prep lists" data-time="2-3 months" id="d-demand-forecast-and-prep-lists">
+        <div class="dish-head">
+          <h3>Demand forecast and prep lists</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 months</span>
+        </div>
+        <p class="desc">Predicts covers for each day from your sales history, weather, public holidays and events, then turns that into prep and ordering lists. Needs about six months of sales data.</p><p class="why"><span class="why-label">Why here</span> Carnival week, Divali and Tobago Carnival change demand sharply. A forecast plans for them.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-special" aria-hidden="true"></i>Chef&#x27;s special</span>
+          <button type="button" class="pick" id="p-demand-forecast-and-prep-lists" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section class="area" id="money" aria-labelledby="h-money">
+      <header class="area-head">
+        <h2 id="h-money">Money and control</h2>
+        <p>See where every dollar went, every morning.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="main" data-name="Daily money report" data-time="1-2 weeks" id="d-daily-money-report">
+        <div class="dish-head">
+          <h3>Daily money report</h3><span class="leader" aria-hidden="true"></span><span class="time">1-2 weeks</span>
+        </div>
+        <p class="desc">Every morning on WhatsApp: yesterday&#x27;s sales from the till checked against card deposits, cash and delivery-app payouts. Any gap is flagged.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-daily-money-report" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Voids and discounts watch" data-time="1-2 weeks" id="d-voids-and-discounts-watch">
+        <div class="dish-head">
+          <h3>Voids and discounts watch</h3><span class="leader" aria-hidden="true"></span><span class="time">1-2 weeks</span>
+        </div>
+        <p class="desc">Voids, discounts and comps by staff member and shift. Unusual patterns stand out before they become habits.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-voids-and-discounts-watch" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Cash-up check" data-time="2-3 days" id="d-cash-up-check">
+        <div class="dish-head">
+          <h3>Cash-up check</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span>
+        </div>
+        <p class="desc">Cash counted at close against cash sales in the system, shift by shift, with the full history in one place.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-cash-up-check" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Bookkeeping on autopilot" data-time="2-3 weeks" id="d-bookkeeping-on-autopilot">
+        <div class="dish-head">
+          <h3>Bookkeeping on autopilot</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">Receipts and invoices sorted into expense categories. Monthly profit and loss and VAT figures ready for your accountant.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-bookkeeping-on-autopilot" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Owner dashboard" data-time="2-3 weeks" id="d-owner-dashboard">
+        <div class="dish-head">
+          <h3>Owner dashboard</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">One screen on your phone: sales, food cost %, labour %, average bill, best-selling dishes and review score.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-owner-dashboard" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="special" data-name="Ask your restaurant" data-time="1-2 months" id="d-ask-your-restaurant">
+        <div class="dish-head">
+          <h3>Ask your restaurant</h3><span class="leader" aria-hidden="true"></span><span class="time">1-2 months</span>
+        </div>
+        <p class="desc">A chat that knows your numbers. Ask &quot;How did Carnival Friday compare with last year?&quot; or &quot;Who sells the most dessert?&quot; and get an answer.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-special" aria-hidden="true"></i>Chef&#x27;s special</span>
+          <button type="button" class="pick" id="p-ask-your-restaurant" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section class="area" id="team" aria-labelledby="h-team">
+      <header class="area-head">
+        <h2 id="h-team">Your team</h2>
+        <p>Train faster, schedule smarter, lose less to turnover.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="starter" data-name="Training assistant" data-time="1 week" id="d-training-assistant">
+        <div class="dish-head">
+          <h3>Training assistant</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">New staff ask a WhatsApp bot about the menu, allergens and house rules, and take a short quiz before their first shift.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-training-assistant" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Recipes and SOPs from video" data-time="1 week" id="d-recipes-and-sops-from-video">
+        <div class="dish-head">
+          <h3>Recipes and SOPs from video</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">The chef cooks a dish once on camera. AI writes the recipe card, plating notes and a step-by-step checklist.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-recipes-and-sops-from-video" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Hiring funnel" data-time="3-5 days" id="d-hiring-funnel">
+        <div class="dish-head">
+          <h3>Hiring funnel</h3><span class="leader" aria-hidden="true"></span><span class="time">3-5 days</span>
+        </div>
+        <p class="desc">A job post links to a WhatsApp chat that screens applicants and books interviews into your calendar.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-hiring-funnel" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Rota from forecast" data-time="2-3 weeks" id="d-rota-from-forecast">
+        <div class="dish-head">
+          <h3>Rota from forecast</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 weeks</span>
+        </div>
+        <p class="desc">The staff schedule built from expected covers, with availability and shift swaps handled on WhatsApp.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-rota-from-forecast" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Voice shift notes" data-time="2-3 days" id="d-voice-shift-notes">
+        <div class="dish-head">
+          <h3>Voice shift notes</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span>
+        </div>
+        <p class="desc">The closing manager records a one-minute voice note. AI turns it into a handover list for the morning team.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-voice-shift-notes" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section class="area" id="safety" aria-labelledby="h-safety">
+      <header class="area-head">
+        <h2 id="h-safety">Safety and equipment</h2>
+        <p>Protect the stock, the cash and the building, day and night.</p>
+      </header>
+      <div class="dishes">
+      <article class="dish" data-course="starter" data-name="Fridge and freezer sensors" data-time="1 week" id="d-fridge-and-freezer-sensors">
+        <div class="dish-head">
+          <h3>Fridge and freezer sensors</h3><span class="leader" aria-hidden="true"></span><span class="time">1 week</span>
+        </div>
+        <p class="desc">Small temperature sensors that message you the moment a unit starts to warm up. A freezer that fails overnight can cost a week of stock.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-fridge-and-freezer-sensors" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Smart camera alerts" data-time="2-4 weeks" id="d-smart-camera-alerts">
+        <div class="dish-head">
+          <h3>Smart camera alerts</h3><span class="leader" aria-hidden="true"></span><span class="time">2-4 weeks</span>
+        </div>
+        <p class="desc">AI added to cameras you may already have: alerts for movement after hours, an open back door or activity at the cash drawer.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-smart-camera-alerts" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="main" data-name="Energy tracking" data-time="2 weeks" id="d-energy-tracking">
+        <div class="dish-head">
+          <h3>Energy tracking</h3><span class="leader" aria-hidden="true"></span><span class="time">2 weeks</span>
+        </div>
+        <p class="desc">Smart meters and plugs show which equipment uses the most power, so you can fix or reschedule the worst offenders.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-main" aria-hidden="true"></i>Main</span>
+          <button type="button" class="pick" id="p-energy-tracking" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      <article class="dish" data-course="starter" data-name="Maintenance reminders" data-time="2-3 days" id="d-maintenance-reminders">
+        <div class="dish-head">
+          <h3>Maintenance reminders</h3><span class="leader" aria-hidden="true"></span><span class="time">2-3 days</span>
+        </div>
+        <p class="desc">Grease trap, hood cleaning, AC service and gas checks on a schedule, with reminders and a log of what was done.</p>
+        <div class="dish-foot">
+          <span class="course"><i class="dot dot-starter" aria-hidden="true"></i>Starter</span>
+          <button type="button" class="pick" id="p-maintenance-reminders" aria-pressed="false">Add to my picks</button>
+        </div>
+      </article>
+      </div>
+    </section>
+
+  <section class="needs" aria-labelledby="h-needs">
+    <div class="needs-intro">
+      <h2 id="h-needs">What it takes from you</h2>
+      <p>No new computers and no IT team. Most of this runs on WhatsApp, Google and the tools you already use.</p>
+    </div>
+    <ul><li>Access to your Google Business listing</li><li>A WhatsApp Business number</li><li>The menu, and recipes with quantities where you have them</li><li>Sales exports from the till or POS (an Excel file is enough)</li><li>About 30 minutes a week to give feedback</li></ul>
+  </section>
+
+  <section class="context" aria-labelledby="h-context">
+    <h2 id="h-context">Why it fits T&amp;T now</h2>
+    <div class="facts"><div class="fact"><span class="fact-num">974k</span><span class="fact-txt">social media users in T&amp;T, about 64% of the population</span><span class="fact-src">DataReportal, Digital 2026</span></div><div class="fact"><span class="fact-num">TT$7.3bn</span><span class="fact-txt">food import bill, the highest on record</span><span class="fact-src">Trinidad Guardian, First Citizens</span></div><div class="fact"><span class="fact-num">Feb / Oct</span><span class="fact-txt">Carnival in Trinidad, then Tobago Carnival in October</span><span class="fact-src">Guardian TT</span></div></div>
+  </section>
+
+  <section class="sources" aria-labelledby="h-sources">
+    <h2 id="h-sources">Sources</h2>
+    <ol><li><a href="https://datareportal.com/reports/digital-2026-trinidad-and-tobago" target="_blank" rel="noopener">DataReportal: Digital 2026, Trinidad and Tobago</a></li><li><a href="https://www.guardian.co.tt/news/tt-food-import-bill-highest-ever-at-73b-6.2.2127409.c88a7fcd2a" target="_blank" rel="noopener">Trinidad Guardian: T&amp;T food import bill highest ever at $7.3b</a></li><li><a href="https://www.firstcitizensgroup.com/tt/news-insights/feeding-the-nation-or-funding-the-idea/" target="_blank" rel="noopener">First Citizens: Feeding the Nation or Funding the Idea?</a></li><li><a href="https://guardian.co.tt/news/tobago-bbs-90-booked-ahead-of-october-carnival-6.2.2411541.ac78d7147c" target="_blank" rel="noopener">Trinidad Guardian: Tobago B&amp;Bs 90% booked ahead of October Carnival</a></li><li><a href="https://apps.apple.com/us/app/fooddrop-food-delivery/id1478415342" target="_blank" rel="noopener">foodDROP on the App Store</a></li><li><a href="https://www.tappogo.app/" target="_blank" rel="noopener">Tappogo, Tobago takeaway and delivery</a></li><li><a href="https://en.wikipedia.org/wiki/WiPay" target="_blank" rel="noopener">WiPay (Wikipedia)</a></li></ol>
+  </section>
+
+  <p class="foot">Setup times are typical for a single restaurant and depend on what is already in place. Tap "Add to my picks" on the ideas you like, then copy the list and send it back.</p>
+</div>
+
+<div class="tray" id="tray" hidden>
+  <div class="tray-in">
+    <p id="tray-count" aria-live="polite">0 ideas picked</p>
+    <div class="tray-btns">
+      <button type="button" class="primary" id="tray-copy">Copy list</button>
+      <button type="button" id="tray-clear">Clear</button>
+    </div>
+    <textarea id="tray-text" aria-label="Your picks" hidden readonly></textarea>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY = 'tt-tech-menu-picks';
+  var dishes = Array.prototype.slice.call(document.querySelectorAll('.dish'));
+  var areas = Array.prototype.slice.call(document.querySelectorAll('.area'));
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+  var tray = document.getElementById('tray');
+  var trayCount = document.getElementById('tray-count');
+  var copyBtn = document.getElementById('tray-copy');
+  var clearBtn = document.getElementById('tray-clear');
+  var fallback = document.getElementById('tray-text');
+  var COURSE = {starter:'Starter', main:'Main', special:"Chef's special"};
+  var picks = [];
+  try { picks = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch (err) { picks = []; }
+
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (err) {} }
+
+  function render(){
+    dishes.forEach(function(d){
+      var on = picks.indexOf(d.id) !== -1;
+      var b = d.querySelector('.pick');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.textContent = on ? 'Picked' : 'Add to my picks';
+    });
+    var n = picks.length;
+    tray.hidden = n === 0;
+    if (n === 0) fallback.hidden = true;
+    trayCount.textContent = n + (n === 1 ? ' idea picked' : ' ideas picked');
+  }
+
+  function listText(){
+    var lines = ['My picks from the Restaurant Tech Menu:'];
+    dishes.forEach(function(d){
+      if (picks.indexOf(d.id) !== -1) {
+        lines.push('- ' + d.dataset.name + ' (' + COURSE[d.dataset.course] + ', ' + d.dataset.time + ')');
+      }
+    });
+    return lines.join('\n');
+  }
+
+  dishes.forEach(function(d){
+    d.querySelector('.pick').addEventListener('click', function(){
+      var i = picks.indexOf(d.id);
+      if (i === -1) picks.push(d.id); else picks.splice(i, 1);
+      save(); render();
+    });
+  });
+
+  copyBtn.addEventListener('click', function(){
+    var text = listText();
+    function showFallback(){
+      fallback.value = text; fallback.hidden = false; fallback.focus(); fallback.select();
+      copyBtn.textContent = 'Select and copy';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){
+        copyBtn.textContent = 'Copied';
+        setTimeout(function(){ copyBtn.textContent = 'Copy list'; }, 1800);
+      }, showFallback);
+    } else { showFallback(); }
+  });
+
+  clearBtn.addEventListener('click', function(){ picks = []; save(); render(); });
+
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      var f = c.dataset.filter;
+      chips.forEach(function(x){ x.setAttribute('aria-pressed', x === c ? 'true' : 'false'); });
+      dishes.forEach(function(d){ d.hidden = !(f === 'all' || d.dataset.course === f); });
+      areas.forEach(function(a){ a.hidden = !a.querySelector('.dish:not([hidden])'); });
+    });
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
