@@ -109,9 +109,9 @@ body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-in
   padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
 .tray-in{max-width:1100px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px}
 .tray p{margin:0; font-family:var(--f-mono); font-size:13px}
-.tray-btns{display:flex; gap:8px}
-.tray button{font-family:var(--f-mono); font-size:13px; border-radius:999px; padding:8px 14px; cursor:pointer; border:1px solid var(--paper); background:transparent; color:var(--paper)}
-.tray button.primary{background:var(--paper); color:var(--ink)}
+.tray-btns{display:flex; flex-wrap:wrap; gap:8px}
+.tray .tray-btn{font-family:var(--f-mono); font-size:13px; line-height:1.2; border-radius:999px; padding:8px 14px; cursor:pointer; border:1px solid var(--paper); background:transparent; color:var(--paper); text-decoration:none; display:inline-flex; align-items:center}
+.tray .tray-btn.primary{background:var(--paper); color:var(--ink); font-weight:500}
 .tray textarea{width:100%; min-height:120px; font-family:var(--f-mono); font-size:12px; background:var(--paper); color:var(--ink); border:0; border-radius:4px; padding:10px}
 .tray :focus-visible{outline-color:var(--paper)}
 
@@ -628,15 +628,16 @@ body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-in
     <ol><li><a href="https://datareportal.com/reports/digital-2026-trinidad-and-tobago" target="_blank" rel="noopener">DataReportal: Digital 2026, Trinidad and Tobago</a></li><li><a href="https://www.guardian.co.tt/news/tt-food-import-bill-highest-ever-at-73b-6.2.2127409.c88a7fcd2a" target="_blank" rel="noopener">Trinidad Guardian: T&amp;T food import bill highest ever at $7.3b</a></li><li><a href="https://www.firstcitizensgroup.com/tt/news-insights/feeding-the-nation-or-funding-the-idea/" target="_blank" rel="noopener">First Citizens: Feeding the Nation or Funding the Idea?</a></li><li><a href="https://guardian.co.tt/news/tobago-bbs-90-booked-ahead-of-october-carnival-6.2.2411541.ac78d7147c" target="_blank" rel="noopener">Trinidad Guardian: Tobago B&amp;Bs 90% booked ahead of October Carnival</a></li><li><a href="https://apps.apple.com/us/app/fooddrop-food-delivery/id1478415342" target="_blank" rel="noopener">foodDROP on the App Store</a></li><li><a href="https://www.tappogo.app/" target="_blank" rel="noopener">Tappogo, Tobago takeaway and delivery</a></li><li><a href="https://en.wikipedia.org/wiki/WiPay" target="_blank" rel="noopener">WiPay (Wikipedia)</a></li></ol>
   </section>
 
-  <p class="foot">Setup times are typical for a single restaurant and depend on what is already in place. Tap "Add to my picks" on the ideas you like, then copy the list and send it back.</p>
+  <p class="foot">Setup times are typical for a single restaurant and depend on what is already in place. Tap "Add to my picks" on the ideas you like, then tap "Send on WhatsApp" to send the list back.</p>
 </div>
 
 <div class="tray" id="tray" hidden>
   <div class="tray-in">
     <p id="tray-count" aria-live="polite">0 ideas picked</p>
     <div class="tray-btns">
-      <button type="button" class="primary" id="tray-copy">Copy list</button>
-      <button type="button" id="tray-clear">Clear</button>
+      <a class="tray-btn primary" id="tray-wa" href="https://wa.me/" target="_blank" rel="noopener">Send on WhatsApp</a>
+      <button type="button" class="tray-btn" id="tray-copy">Copy list</button>
+      <button type="button" class="tray-btn" id="tray-clear">Clear</button>
     </div>
     <textarea id="tray-text" aria-label="Your picks" hidden readonly></textarea>
   </div>
@@ -650,6 +651,7 @@ body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-in
   var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
   var tray = document.getElementById('tray');
   var trayCount = document.getElementById('tray-count');
+  var waLink = document.getElementById('tray-wa');
   var copyBtn = document.getElementById('tray-copy');
   var clearBtn = document.getElementById('tray-clear');
   var fallback = document.getElementById('tray-text');
@@ -670,6 +672,8 @@ body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-in
     tray.hidden = n === 0;
     if (n === 0) fallback.hidden = true;
     trayCount.textContent = n + (n === 1 ? ' idea picked' : ' ideas picked');
+    // No number in the link: WhatsApp opens its own contact picker.
+    waLink.href = 'https://wa.me/?text=' + encodeURIComponent(listText());
   }
 
   function listText(){
